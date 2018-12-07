@@ -2,6 +2,7 @@
 
 #include "Server.h"
 
+#include <queue>
 #include <unordered_map>
 
 
@@ -25,8 +26,11 @@ private:
 class SimpleSessionProvider {
 public:
 
-	const std::string& CreateSession () {
-		return "";
+	const std::string CreateSession (SimpleSession&& session) {
+		std::string session_id = std::to_string(++next_session_id);
+
+		sessions.emplace (session_id, std::move(session));
+		return session_id;
 	}
 
 	/*const std::string& CreateSession (SimpleSession&& session) {
@@ -34,7 +38,7 @@ public:
 	}*/
 
 	std::optional<SimpleSession*> GetSession (const std::string& session_id) {
-		return nullptr;
+		return std::nullopt;
 	}
 
 private:
@@ -43,9 +47,20 @@ private:
 	std::unordered_map<std::string, SimpleSession> sessions;
 };
 
-int main () {
+class MyFirstPage {
+public:
 
+	HttpResponse<SimpleSession> HandleRequest (HttpRequest<SimpleSession>& request) {
+		HttpResponse<SimpleSession> resp;
+
+		return resp;
+	}
+};
+
+int main () {
 	ctas::Server<SimpleSessionProvider, SimpleSession> server;
+
+	server.registerPage<MyFirstPage> ("/");
 
 	server.Start ();
 

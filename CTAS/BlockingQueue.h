@@ -44,7 +44,7 @@ template<typename T>
 inline void BlockingQueue<T>::Push (T && value) {
 	std::lock_guard<std::mutex> mlock (mtx);
 
-	queue.push (value);
+	queue.push (std::move(value));
 
 	conditional_var.notify_one ();
 }

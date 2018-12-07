@@ -8,6 +8,7 @@
 
 template<typename Session>
 class PageHolderBase {
+public:
 	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) = 0;
 };
 

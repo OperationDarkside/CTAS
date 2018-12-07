@@ -21,7 +21,7 @@ namespace ctas {
 	template<class Base, class Session>
 	using IsSessionProviderBase = std::enable_if_t<
 		std::is_member_function_pointer<decltype(&Base::CreateSession)>::value
-		&& std::is_same<decltype(&Base::CreateSession), const std::string& (Base::*)()>::value
+		&& std::is_same<decltype(&Base::CreateSession), const std::string (Base::*)(Session&& session)>::value
 		&& std::is_member_function_pointer<decltype(&Base::GetSession)>::value
 		&& std::is_same<decltype(&Base::GetSession), std::optional<Session*> (Base::*)(const std::string& session_id)>::value
 		, Base>;
@@ -47,23 +47,20 @@ namespace ctas {
 		}
 
 		void Start () {
+			SetupPages ();
+
 			namespace net = std::experimental::net;
 
 			net::io_context ctx;
-			net::ip::tcp::socket socket (ctx);
 			net::ip::tcp::acceptor accpt (ctx, net::ip::tcp::endpoint (net::ip::tcp::v4 (), 1337));
 			
 			while (true) {
 				std::error_code ec;
-				socket = accpt.accept (ec);
+				net::ip::tcp::socket socket = accpt.accept (ec);
 				if (ec) {
 					break;
 				}
-				std::string data;
-				net::read_until (socket, net::dynamic_buffer(data), "\r\n\r\n");
-
-				std::cout << data;
-				
+				handleRead (std::move(socket), ctx);
 			}
 		}
 
@@ -73,7 +70,42 @@ namespace ctas {
 		BlockingQueue<HttpRequest<Session>> queue;
 
 		SessionProvider session_provider;
-		/*
+
+		void handleRead (std::experimental::net::ip::tcp::socket&& socket, std::experimental::net::io_context& ctx) {
+			namespace net = std::experimental::net;
+
+			std::string data;
+			std::error_code ec;
+			net::read_until (socket, net::dynamic_buffer(data), "\r\n\r\n", ec);
+			if (ec) {
+				// TODO: Handle Error
+				return;
+			}
+
+			// Parse HTTP Header
+			HttpRequest<Session> request(ctx);
+			request.Parse (data);
+			
+			auto page = pages.find (request.Resource ());
+			if (page == pages.end ()) {
+				std::error_code ec_write;
+				net::write (socket, net::buffer("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"), ec_write);
+				if (ec_write) {
+					// TODO: Handle Error
+					return;
+				}
+				socket.close ();
+				return;
+			}
+
+			PageHolderBase<Session>* holder = page->second.get ();
+			request.Page (holder);
+
+			request.Socket (std::move(socket));
+
+			queue.Push (std::move (request));
+		}
+
 		void SetupPages () {
 			size_t supported_thread_num = std::thread::hardware_concurrency ();
 
@@ -109,20 +141,26 @@ namespace ctas {
 							fields["Connection"] = " close";
 							fields["Content-Type"] = " text/html";
 							if (response.HasSession ()) {
-								const std::string& new_session_id = session_provider.CreateSession (response.MoveSession ());
+								const std::string new_session_id = session_provider.CreateSession (response.MoveSession ());
 								fields["Set-Cookie"] = "id=" + new_session_id;
 							}
 
 							// response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n" + response;
 
-							Net::Sockets::Socket& socket = request.Socket ();
+							std::experimental::net::ip::tcp::socket& socket = request.Socket ();
 
 							std::string resp_str = response.toSendString ();
-
-							socket.Send (resp_str.c_str ());
-							socket.Disconnect ();
+							std::error_code ec_write;
+							std::experimental::net::write (socket, std::experimental::net::buffer (resp_str), ec_write);
+							if (ec_write) {
+								// TODO: Handle Error
+								return;
+							}
+							socket.close ();
+							
 						} catch (std::exception& ex) {
 							const char* what = ex.what ();
+							std::cout << what;
 						}
 						// socket->Disconnect();
 					}
@@ -132,6 +170,7 @@ namespace ctas {
 				);
 			}
 		}
+		/*
 		void HandleReads (std::list<Net::Sockets::Socket>& clientSockets, std::vector<Net::Sockets::Socket*>& readSockets) {
 			std::vector<Net::Sockets::Socket*> eraseSockets;
 

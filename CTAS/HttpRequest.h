@@ -6,6 +6,8 @@
 #include <optional>
 #include <unordered_map>
 
+#include <experimental/net>
+
 template<typename Session>
 class PageHolderBase;
 
@@ -19,8 +21,9 @@ enum class REQUEST_METHOD {
 template<typename Session>
 class HttpRequest {
 public:
-	HttpRequest () {};
-	~HttpRequest () {};
+	HttpRequest (std::experimental::net::io_context& ctx) : sock(ctx) {
+
+	}
 
 	REQUEST_METHOD& Method () {
 		return method;
@@ -71,6 +74,13 @@ public:
 
 	void CurrentSession (Session* _session) {
 		session = _session;
+	};
+
+	std::experimental::net::ip::tcp::socket& Socket () {
+		return sock;
+	};
+	void Socket (std::experimental::net::ip::tcp::socket&& socket) {
+		sock = std::move (socket);
 	};
 	/*
 	Net::Sockets::Socket& Socket () {
@@ -204,6 +214,7 @@ private:
 	PageHolderBase<Session>* page = nullptr;
 	Session* session = nullptr;
 
+	std::experimental::net::ip::tcp::socket sock;
 	//Net::Sockets::Socket sock;
 
 	bool ParseFirstLine (const std::string& line) {
