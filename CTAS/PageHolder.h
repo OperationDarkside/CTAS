@@ -16,6 +16,11 @@ template<typename Page, typename Session>
 class PageHolder : public PageHolderBase<Session> {
 public:
 
+	PageHolder () = default;
+
+	template<typename... Args>
+	PageHolder (Args&&... args) : page(std::forward<Args> (args)...) {}
+
 	HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) override {
 		try {
 			HttpResponse<Session> response = page.HandleRequest (request);

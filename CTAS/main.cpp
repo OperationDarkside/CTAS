@@ -53,6 +53,10 @@ public:
 	HttpResponse<SimpleSession> HandleRequest (HttpRequest<SimpleSession>& request) {
 		HttpResponse<SimpleSession> resp;
 
+		auto& headers = resp.HeaderFields ();
+		headers["Content-Type"] = "application/json";
+		resp.Body ("{\"Bla\": 1337}");
+
 		return resp;
 	}
 };
@@ -62,7 +66,7 @@ int main () {
 
 	server.registerPage<MyFirstPage> ("/");
 
-	server.Start ();
+	server.Start (1337);
 
 	return 0;
 }

@@ -21,7 +21,7 @@ enum class REQUEST_METHOD {
 template<typename Session>
 class HttpRequest {
 public:
-	HttpRequest (std::experimental::net::io_context& ctx) : sock(ctx) {
+	HttpRequest (/*std::experimental::net::io_context& ctx*/) /*: sock(ctx)*/ {
 
 	}
 
@@ -56,13 +56,13 @@ public:
 		return element->second;
 	};
 
-	PageHolderBase<Session>* Page () {
+	/*PageHolderBase<Session>* Page () {
 		return page;
-	};
+	};*/
 
-	void Page (PageHolderBase<Session>* _page) {
+	/*void Page (PageHolderBase<Session>* _page) {
 		page = _page;
-	};
+	};*/
 
 	bool HasSession () {
 		return session != nullptr;
@@ -76,12 +76,12 @@ public:
 		session = _session;
 	};
 
-	std::experimental::net::ip::tcp::socket& Socket () {
+	/*std::experimental::net::ip::tcp::socket& Socket () {
 		return sock;
 	};
 	void Socket (std::experimental::net::ip::tcp::socket&& socket) {
 		sock = std::move (socket);
-	};
+	};*/
 	/*
 	Net::Sockets::Socket& Socket () {
 		return sock;
@@ -211,10 +211,10 @@ private:
 	std::unordered_map<std::string, std::string> get_fields;
 	std::unordered_map<std::string, std::string> post_fields;
 
-	PageHolderBase<Session>* page = nullptr;
+	//PageHolderBase<Session>* page = nullptr;
 	Session* session = nullptr;
 
-	std::experimental::net::ip::tcp::socket sock;
+	//std::experimental::net::ip::tcp::socket sock; // TODO: solve init problem
 	//Net::Sockets::Socket sock;
 
 	bool ParseFirstLine (const std::string& line) {
