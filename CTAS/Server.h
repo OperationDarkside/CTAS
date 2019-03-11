@@ -137,6 +137,7 @@ namespace ctas {
 						net::read_until (socket, net::dynamic_buffer (data), "\r\n\r\n", ec);
 						if (ec) {
 							// TODO: Handle Error
+							std::cout << "Error at reading from stream";
 							return;
 						}
 
@@ -150,6 +151,7 @@ namespace ctas {
 							net::write (socket, net::buffer ("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"), ec_write);
 							if (ec_write) {
 								// TODO: Handle Error
+								std::cout << "Error at writing to stream. 404";
 								return;
 							}
 							socket.close ();
@@ -190,6 +192,7 @@ namespace ctas {
 							std::experimental::net::write (socket, std::experimental::net::buffer (resp_str), ec_write);
 							if (ec_write) {
 								// TODO: Handle Error
+								std::cout << "Error at writing to stream.";
 								return;
 							}
 							socket.close ();

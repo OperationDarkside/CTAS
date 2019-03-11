@@ -28,7 +28,9 @@ public:
 			return response;
 		} catch (std::exception& ex) {
 			const char* what = ex.what ();
-			// TODO restart page
+
+			page = Page();
+
 			HttpResponse<Session> response;
 			response.ResponseCode (RESPONSE_CODE::ERROR_500);
 			return response;
@@ -36,9 +38,6 @@ public:
 	};
 private:
 	Page page;
-	//std::vector<T> buffered_webpages;
-	//ThreadPool threadpool;
-	//BlockingQueue<HttpRequest> queue;
 };
 
 #endif // !PAGEHOLDER_H
