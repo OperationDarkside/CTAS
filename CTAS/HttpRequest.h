@@ -76,6 +76,14 @@ public:
 		session = _session;
 	};
 
+	const std::string& Body() {
+		return body;
+	}
+
+	void Body(const std::string& _body) {
+		body = _body;
+	}
+
 	/*std::experimental::net::ip::tcp::socket& Socket () {
 		return sock;
 	};
@@ -194,7 +202,7 @@ public:
 			if (field.length () < (colon_pos + 2)) {
 				header_fields[key] = "";
 			}
-			std::string val = field.substr (colon_pos + 1);
+			std::string val = field.substr (colon_pos + 2);
 
 			header_fields[key] = val;
 		}
@@ -207,6 +215,7 @@ private:
 	std::string resource;
 	std::string get_str;
 	std::string version;
+	std::string body;
 	std::unordered_map<std::string, std::string> header_fields;
 	std::unordered_map<std::string, std::string> get_fields;
 	std::unordered_map<std::string, std::string> post_fields;

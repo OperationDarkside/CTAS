@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <thread>
 #include <experimental/net>
+#include <charconv>
 
 #include <iostream>
 
@@ -134,12 +135,15 @@ namespace ctas {
 						// Read stream
 						std::string data;
 						std::error_code ec;
-						net::read_until (socket, net::dynamic_buffer (data), "\r\n\r\n", ec);
+						size_t readed = net::read_until (socket, net::dynamic_string_buffer (data), "\r\n\r\n", ec);
 						if (ec) {
 							// TODO: Handle Error
 							std::cout << "Error at reading from stream";
-							return;
+							continue;
 						}
+						//std::cout << "Data Length: " << data.length() << "\r\n";
+						std::cout << "Readed: " << readed << "\r\n";
+						//std::cout << "Data: " << data << "\r\n";
 
 						// Parse HTTP Header
 						HttpRequest<Session> request;
@@ -152,13 +156,76 @@ namespace ctas {
 							if (ec_write) {
 								// TODO: Handle Error
 								std::cout << "Error at writing to stream. 404";
-								return;
+								continue;
 							}
 							socket.close ();
-							return;
+							continue;
 						}
 
-						// TODO read body if !GET
+						// Read Body
+						std::optional<std::string> strContentLength = request.HeaderField("Content-Length");
+						if(strContentLength.has_value()){
+							std::string& contentLength = strContentLength.value ();
+
+							int len = -1;
+							auto[p, ec] = std::from_chars(contentLength.data(), contentLength.data() + contentLength.length(), len);
+							if(ec != std::errc()){
+								std::cout << p;
+
+								std::error_code ec_write;
+								net::write (socket, net::buffer ("HTTP/1.1 411 Lenghth required\r\nConnection: close\r\n\r\n"), ec_write);
+								if (ec_write) {
+									// TODO: Handle Error
+									std::cout << "Error at writing to stream. 411";
+									continue;
+								}
+								std::cout << "Error at parsing header \"Content-Length\". 411";
+								socket.close ();
+								continue;
+							}
+
+							// std::cout << "content length: " << len << "\r\n";
+
+							std::string bodyData = data.substr(readed, data.length() - readed);
+							if(data.length() < (readed + len)){
+								// still data to read
+								size_t to_read = len - (data.length() - readed);
+								std::string bodyDataAdd;
+								std::error_code ecBody;
+
+								bodyDataAdd.reserve(to_read);
+
+								std::vector<char> bodydata;
+								bodydata.resize(to_read);
+								auto buff = net::buffer(bodydata.data(), to_read);
+								size_t readed_body = socket.read_some(buff, ecBody);
+
+								bodyDataAdd.append(bodydata.data(), readed_body);
+								//std::string ggg(bodydata.data(), readed_body);
+
+								// size_t readed_body = net::read_until(socket, net::dynamic_buffer(bodyDataAdd), "\r\n", ecBody);
+								if (ecBody) {
+									std::cout << ecBody.message() << std::endl;
+									// TODO: Handle Error
+									std::error_code ec_write;
+									net::write (socket, net::buffer ("HTTP/1.1 500 Internal Error\r\nConnection: close\r\n\r\n"), ec_write);
+									if (ec_write) {
+										// TODO: Handle Error
+										std::cout << "Error at writing to stream. 411";
+										continue;
+									}
+									std::cout << "Error at reading additional body from stream";
+									continue;
+								}
+								//std::cout << "additional body length: " << readed_body << "\r\n";
+
+								bodyData += bodyDataAdd;
+							}
+
+							// std::cout << "final body length: " << bodyData.length() << "\r\n";
+
+							request.Body(bodyData);
+						}
 
 						PageHolderBase<Session>* holder = page->second.get ();
 
@@ -193,7 +260,7 @@ namespace ctas {
 							if (ec_write) {
 								// TODO: Handle Error
 								std::cout << "Error at writing to stream.";
-								return;
+								continue;
 							}
 							socket.close ();
 
