@@ -6,6 +6,8 @@
 #include <optional>
 #include <unordered_map>
 
+namespace ctas {
+
 enum class RESPONSE_CODE {
 	OK_200,
 	REDIRECT_301,
@@ -86,5 +88,6 @@ private:
 
 	std::optional<Session> session = std::nullopt;
 };
+}
 
 #endif // !HTTPRESPONSE_H

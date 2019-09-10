@@ -6,6 +6,8 @@
 #include "HttpResponse.h"
 #include <exception>
 
+namespace ctas {
+
 template<typename Session>
 class PageHolderBase {
 public:
@@ -21,7 +23,7 @@ public:
 	template<typename... Args>
 	PageHolder (Args&&... args) : page(std::forward<Args> (args)...) {}
 
-	HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) override {
+	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) override {
 		try {
 			HttpResponse<Session> response = page.HandleRequest (request);
 
@@ -39,5 +41,6 @@ public:
 private:
 	Page page;
 };
+}
 
 #endif // !PAGEHOLDER_H

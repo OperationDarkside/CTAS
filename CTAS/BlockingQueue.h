@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace ctas {
 // Reference material: https://github.com/juanchopanza/cppblog/tree/master/Concurrency/Queue
 template <typename T>
 class BlockingQueue {
@@ -52,6 +53,7 @@ inline void BlockingQueue<T>::Push (T && value) {
 template<typename T>
 inline size_t BlockingQueue<T>::Count () {
 	return queue.size ();
+}
 }
 
 #endif // !BLOCKINGQUEUE_H

@@ -8,6 +8,8 @@
 
 #include <experimental/net>
 
+namespace ctas {
+
 template<typename Session>
 class PageHolderBase;
 
@@ -319,4 +321,6 @@ private:
 		return sResult;
 	};
 };
+
+}
 #endif // !HTTPREQUEST_H

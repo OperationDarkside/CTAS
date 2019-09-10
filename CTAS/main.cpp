@@ -4,6 +4,9 @@
 
 #include <queue>
 #include <unordered_map>
+#include <rapidjson/document.h>
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 
 class SimpleSession {
@@ -50,8 +53,8 @@ private:
 class MyFirstPage {
 public:
 
-	HttpResponse<SimpleSession> HandleRequest (HttpRequest<SimpleSession>& request) {
-		HttpResponse<SimpleSession> resp;
+	ctas::HttpResponse<SimpleSession> HandleRequest (ctas::HttpRequest<SimpleSession>& request) {
+		ctas::HttpResponse<SimpleSession> resp;
 
 		auto& headers = resp.HeaderFields ();
 		headers["Content-Type"] = "text/html";
@@ -83,8 +86,8 @@ public:
 class Receiver {
 public:
 
-	HttpResponse<SimpleSession> HandleRequest (HttpRequest<SimpleSession>& request) {
-		HttpResponse<SimpleSession> resp;
+	ctas::HttpResponse<SimpleSession> HandleRequest (ctas::HttpRequest<SimpleSession>& request) {
+		ctas::HttpResponse<SimpleSession> resp;
 
 		auto& headers = resp.HeaderFields ();
 		headers["Content-Type"] = "text/html";
@@ -93,9 +96,43 @@ public:
 
 		std::cout << body << std::endl;
 
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+		writer.StartObject();
+		writer.Key("name");
+		writer.String("Peter");
+		writer.Key("age");
+		writer.Int(30);
+		writer.EndObject();
+
+		resp.Body(buffer.GetString());
+
 		return resp;
 	}
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 int main () {
 	ctas::Server<SimpleSessionProvider, SimpleSession> server;
@@ -103,7 +140,18 @@ int main () {
 	server.registerPage<MyFirstPage> ("/");
 	server.registerPage<Receiver> ("/Receiver");
 
-	server.Start (1337);
+	server.start (1337);
 
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
