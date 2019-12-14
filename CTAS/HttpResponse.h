@@ -19,26 +19,24 @@ enum class RESPONSE_CODE {
 template<typename Session>
 class HttpResponse {
 public:
-	//HttpResponse ();
-	//~HttpResponse ();
 
 	RESPONSE_CODE ResponseCode () {
 		return response_code;
-	};
+	}
 	void ResponseCode (RESPONSE_CODE code) {
 		response_code = code;
-	};
+	}
 
 	std::string& Body () {
 		return body;
-	};
+	}
 	void Body (std::string body) {
 		this->body = body;
-	};
+	}
 
 	std::unordered_map<std::string, std::string>& HeaderFields () {
 		return header_fields;
-	};
+	}
 
 	std::string toSendString () {
 		std::string res = "HTTP/" + version;
@@ -63,7 +61,7 @@ public:
 		res += "\r\n\r\n" + body;
 
 		return res;
-	};
+	}
 
 	bool HasSession () {
 		return session.has_value ();
@@ -71,14 +69,14 @@ public:
 
 	Session& CreateSession () {
 		if (!session) {
-			session = Session ();
+			session = Session();
 		}
 		return session.value ();
-	};
+	}
 
 	Session&& MoveSession () {
 		return std::move (session.value ());
-	};
+	}
 
 private:
 	RESPONSE_CODE response_code = RESPONSE_CODE::OK_200;

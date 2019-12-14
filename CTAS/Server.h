@@ -266,7 +266,7 @@ private:
 						}
 
 						HttpResponse<Session> response = holder->GetResponse(
-								std::move(request));
+								request);
 
 						auto &fields = response.HeaderFields();
 						fields["Connection"] = " close";

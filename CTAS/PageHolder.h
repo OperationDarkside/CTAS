@@ -11,7 +11,7 @@ namespace ctas {
 template<typename Session>
 class PageHolderBase {
 public:
-	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) = 0;
+	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>& request) = 0;
 };
 
 template<typename Page, typename Session>
@@ -23,7 +23,7 @@ public:
 	template<typename... Args>
 	PageHolder (Args&&... args) : page(std::forward<Args> (args)...) {}
 
-	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>&& request) override {
+	virtual HttpResponse<Session> GetResponse (HttpRequest<Session>& request) override {
 		try {
 			HttpResponse<Session> response = page.HandleRequest (request);
 
